@@ -5,8 +5,10 @@ const { createProxyMiddleware } = require("http-proxy-middleware");
 
 const grpc = require("@grpc/grpc-js");
 const protoLoader = require("@grpc/proto-loader");
+const amqp = require("amqplib");
 
 const PORT = 3000;
+const AMQP_URL = process.env.AMQP_URL || "amqp://localhost";
 
 const GRAPHQL_URL =
   "http://127.0.0.1:8080";
@@ -46,6 +48,53 @@ const laguClient =
     GRPC_ADDR,
     grpc.credentials.createInsecure()
   );
+
+let channel = null;
+
+async function connectQueue() {
+  try {
+    const conn = await amqp.connect(AMQP_URL);
+    conn.on("error", () => {});
+    conn.on("close", () => {
+      channel = null;
+      setTimeout(connectQueue, 3000);
+    });
+    channel = await conn.createChannel();
+    await channel.assertExchange("orders", "fanout", { durable: true });
+    console.log("Gateway terhubung ke RabbitMQ");
+  } catch (error) {
+    console.warn("RabbitMQ belum tersedia, retry dalam 3 detik");
+    setTimeout(connectQueue, 3000);
+  }
+}
+
+function publishLaguRequested(lagu) {
+  if (!channel) {
+    console.warn("Channel RabbitMQ tidak tersedia, event tidak terkirim:", lagu.id);
+    return false;
+  }
+
+  const payload = {
+    type: "lagu.requested",
+    data: {
+      id: lagu.id,
+      judul: lagu.judul,
+      album_id: lagu.album_id,
+      requestedAt: new Date().toISOString()
+    }
+  };
+
+  return channel.publish(
+    "orders",
+    "",
+    Buffer.from(JSON.stringify(payload)),
+    {
+      persistent: true,
+      contentType: "application/json",
+      messageId: `lagu-${lagu.id}-${Date.now()}`
+    }
+  );
+}
 
 // ===============================
 // EXPRESS
@@ -160,6 +209,12 @@ app.get(
           });
         }
 
+        const eventPublished = publishLaguRequested(lagu);
+
+        if (eventPublished) {
+          console.log(`Event lagu.requested dipublikasikan untuk lagu #${lagu.id}`);
+        }
+
         res.json(lagu);
       }
     );
@@ -189,6 +244,7 @@ app.listen(
   PORT,
 
   () => {
+    connectQueue();
 
     console.log(
       `Gateway berjalan di http://localhost:${PORT}`

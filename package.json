@@ -2,15 +2,18 @@
   "name": "api-gateway-kelompok",
   "version": "1.0.0",
   "description": "API Gateway (Express) dengan reverse proxy dan rate limiting untuk music-api dan service kedua",
-  "main": "gateway.js",
+  "main": "gateway/gateway.js",
   "scripts": {
-    "start": "node gateway.js",
+    "start": "node gateway/gateway.js",
     "mock": "node mock/mock-services.js",
+    "consumer": "node notification-service/notification-service.js",
+    "consumer:crash": "node notification-service/notification-service.js --crash",
     "test:ratelimit": "node test-ratelimit.js"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.14.6",
     "@grpc/proto-loader": "^0.7.15",
+    "amqplib": "^2.2.1",
     "axios": "^1.21.0",
     "express": "^4.21.2",
     "express-graphql": "^0.12.0",
