@@ -1,0 +1,204 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Music API Gateway",
+    "version": "1.0.0",
+    "description": "Dokumentasi API Gateway untuk Music API menggunakan GraphQL dan gRPC."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "API Gateway"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Gateway",
+      "description": "Endpoint utama API Gateway"
+    },
+    {
+      "name": "Music",
+      "description": "Endpoint layanan Music API"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Gateway"],
+        "summary": "Health Check",
+        "description": "Memeriksa status API Gateway.",
+        "responses": {
+          "200": {
+            "description": "Gateway berjalan normal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "gateway": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                },
+                "example": {
+                  "status": "ok",
+                  "gateway": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/test-conflict": {
+      "post": {
+        "tags": ["Gateway"],
+        "summary": "Test Error 409 Conflict",
+        "description": "Endpoint demonstrasi untuk menguji response HTTP 409 Conflict.",
+        "responses": {
+          "409": {
+            "description": "Data sudah tersedia",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Conflict"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Data sudah tersedia"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Conflict",
+                  "message": "Data sudah tersedia"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/test-schema-drift": {
+      "get": {
+        "tags": ["Music"],
+        "summary": "Demo Schema Drift",
+        "description": "Dokumentasi schema sudah diperbarui agar sesuai dengan response aktual yang menggunakan field title.",
+        "responses": {
+          "200": {
+            "description": "Data lagu berhasil ditemukan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "Mock Lagu"
+                    },
+                    "album_id": {
+                      "type": "integer",
+                      "example": 1
+                    }
+                  }
+                },
+                "example": {
+                  "id": 1,
+                  "title": "Mock Lagu",
+                  "album_id": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/graphql": {
+      "post": {
+        "tags": ["Music"],
+        "summary": "GraphQL Music API",
+        "description": "Meneruskan request ke GraphQL music-api pada port 8080.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "example": "{ lagu { id judul } }"
+                  }
+                },
+                "required": ["query"]
+              },
+              "example": {
+                "query": "{ lagu { id judul } }"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Request GraphQL berhasil"
+          },
+          "400": {
+            "description": "Request GraphQL tidak valid"
+          },
+          "429": {
+            "description": "Rate limit terlampaui"
+          }
+        }
+      }
+    },
+    "/grpc/lagu/{id}": {
+      "get": {
+        "tags": ["Music"],
+        "summary": "Get Lagu berdasarkan ID",
+        "description": "Mengambil data lagu melalui REST-to-gRPC.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID lagu yang ingin dicari",
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data lagu berhasil ditemukan"
+          },
+          "400": {
+            "description": "ID harus angka"
+          },
+          "404": {
+            "description": "Lagu tidak ditemukan"
+          },
+          "503": {
+            "description": "gRPC service tidak tersedia"
+          },
+          "429": {
+            "description": "Rate limit terlampaui"
+          }
+        }
+      }
+    }
+  }
+}

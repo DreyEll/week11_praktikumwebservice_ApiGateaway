@@ -147,3 +147,40 @@ npm run consumer
 
 Ini membuktikan bahwa sistem menggunakan at-least-once delivery. Karena `ack` tidak pernah dikirim saat crash, RabbitMQ akan redeliver pesan dan consumer baru akan memprosesnya lagi. Dengan kata lain, email/notifikasi bisa terkirim dua kali jika tidak ada mekanisme idempotency.
 
+## Swagger UI dan OpenAPI
+
+Swagger UI digunakan untuk melihat dokumentasi API Gateway secara interaktif dan mencoba endpoint secara langsung.
+
+### Menjalankan Swagger
+
+1. Install dependency Swagger UI:
+
+```bash
+npm install swagger-ui-express
+```
+
+2. Pastikan file `openapi.json` tersedia di folder utama project.
+
+3. Jalankan API Gateway:
+
+```bash
+npm start
+```
+
+4. Buka dokumentasi Swagger melalui browser:
+
+http://localhost:3000/docs
+
+### Endpoint Dokumentasi
+
+- `GET /docs` - Menampilkan Swagger UI.
+- `GET /openapi.json` - Menampilkan dokumentasi OpenAPI dalam format JSON.
+
+### Pengujian Error 409 Conflict
+
+1. Buka Swagger UI.
+2. Pilih endpoint `POST /test-conflict`.
+3. Klik Try it out.
+4. Klik Execute.
+5. Periksa response yang menunjukkan HTTP 409 Conflict.
+
